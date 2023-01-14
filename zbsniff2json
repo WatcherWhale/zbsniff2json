@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+
+'''
+zbsniff2json - a sniffing tool for ZigBee/IEEE 802.15.4 networks
+'''
+from typing import Optional, Any, List, Dict, Union
+
+import sys
+import signal
+import argparse
+import os
+import json
+from scapy.all import Dot15d4FCS, Dot15d4Cmd, Dot15d4Data
+from killerbee import KillerBee, DLT_IEEE802_15_4
+from killerbee.scapy_extensions import kbgetpanid
+from mac_vendor_lookup import MacLookup
+from killerbee.kbutils import devlist
+
+kb: Optional[KillerBee] = None
+running = True
+
+class FileWritePrinter:
+    def __init__(self, stream, path):
+        self.stream = stream
+        self.path = path
+        self.file = open(self.path, "w+")
+
+    def write(self, data):
+        self.stream.write(data)
+        self.stream.flush()
+        self.file.write(data)
+
+    def flush(self):
+        self.stream.flush()
+        self.file.flush()
+
+    def close(self):
+        self.stream.close()
+        self.file.close()
+
+def interrupt(signum, frame):
+    global running
+    running = False
+
+def dump_packets(args):
+    global kb
+    global running
+
+    rf_freq_mhz = kb.frequency(args.channel, args.subghz_page) / 1000.0
+
+    panList = []
+    devList = []
+
+    print(json.dumps({
+        "type": "new_scn",
+        "cha": args.channel,
+        "frq": rf_freq_mhz,
+        "dev": args.devstring,
+        "dvl": list(map(lambda x: x[1] + " (" + x[0] + ")", devlist())),
+        "pag": args.subghz_page
+    }))
+
+    while running:
+
+        packet: Optional[Dict[Union[int, str], Any]] = kb.pnext()
+
+        if packet is None:
+            continue
+
+        try:
+            frame = Dot15d4FCS(packet['bytes'])
+            pan, layer = kbgetpanid(frame)
+
+            if layer is not Dot15d4Cmd and layer is not Dot15d4Data:
+                continue
+
+            if pan is not None and pan not in panList:
+                print(json.dumps({
+                    "type": "new_nwk",
+                    "pan": "{0:#0{1}x}".format(pan,4),
+                    "cha": args.channel
+
+                }))
+                panList.append(pan)
+
+            ext_src = frame.ext_src
+            if ext_src is not None:
+                addr = int_to_mac(ext_src)
+
+            if ext_src is not None and addr[0:17] not in devList:
+                devList.append(addr[0:17])
+                try:
+                    print(json.dumps({
+                        "type": "new_dev",
+                        "pan": "{0:#0{1}x}".format(pan,4),
+                        "dev": addr,
+                        "man": MacLookup().lookup(addr[0:17]),
+                        "cha": args.channel
+                    }))
+                except:
+                    print(json.dumps({
+                        "type": "new_dev",
+                        "pan": "{0:#0{1}x}".format(pan,4),
+                        "dev": addr,
+                        "cha": args.channel
+                    }))
+        except:
+            pass
+
+def int_to_mac(macint):
+    if type(macint) != int:
+        raise ValueError('invalid integer')
+    mac = ':'.join(['{}{}'.format(a, b)
+                     for a, b
+                     in zip(*[iter('{:012x}'.format(macint))]*2)])
+    if len(mac) < 23:
+        return "00:" + mac
+    else:
+        return mac
+
+def main():
+    global kb
+
+
+    # Command-line arguments
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-i', '--iface', '--dev', action='store', dest='devstring',
+                        help='(Required) String: Path to the interface of the device being used.')
+    parser.add_argument('-d', '--device', action='store',
+                        help='(Required) String: Name of the hardare device being used. E.g. apimote')
+    parser.add_argument('-o' , '--output', help="(Required) Output file path", required=True)
+    parser.add_argument('-c', '--channel', action='store', type=int, default=None,
+                        help='(Required) Int: Channel value to listen on.')
+    parser.add_argument('-s', '--subghz_page', action='store', type=int, default=0,
+                        help='(Optional) Int: Page value to listen on.')
+    parser.add_argument('-u', '--update', action='store_true', default=False,
+                        help='(Optional) Update MAC vendor lookup table')
+    args = parser.parse_args()
+
+    sys.stdout = FileWritePrinter(sys.stdout, args.output)
+
+    if args.channel == None:
+        print("ERROR: Must specify a channel.", file=sys.stderr)
+        sys.exit(1)
+
+    if args.update:
+        # Update vendor lookup table
+        MacLookup().update_vendors()
+
+    kb = KillerBee(device=args.devstring, hardware=args.device)
+
+    signal.signal(signal.SIGINT, interrupt)
+
+    if not kb.is_valid_channel(args.channel, args.subghz_page):
+        print("ERROR: Must specify a valid IEEE 802.15.4 channel for the selected device.", file=sys.stderr)
+        kb.close()
+        sys.exit(1)
+
+    kb.set_channel(args.channel, args.subghz_page)
+    kb.sniffer_on()
+
+    dump_packets(args)
+
+    kb.sniffer_off()
+    kb.close()
+
+if __name__ == "__main__":
+  main()
