@@ -61,7 +61,7 @@ The output is a JSON file that contains multiple JSON objects: below an example 
   - Dvl \
   The hardware this script is using to sniff.
   - Pag \
-  Pagina
+  Frequency page
     
 - new_nwk; A new network is discovered that has not been discovered before.
   - Pan \
@@ -73,7 +73,7 @@ The output is a JSON file that contains multiple JSON objects: below an example 
   The PAN-ID of the network this device is connected to.
   - Dev \
   The MAC address of the device.
-  - Man
+  - Man \
   If found: The manufacturer of this device.
-  - Cha
+  - Cha \
   The channel that hosts this device.
