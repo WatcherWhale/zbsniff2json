@@ -1,12 +1,12 @@
 # Zigbee Sniff2JSON
-Welcome to our Sniff2JSON tool. This project was developed for the course "Wireless technologies". It sniffs for Zigbee traffic and outputs a JSON file with all the specifics.
+Welcome to our Sniff2JSON tool. This project was developed for the course "Wireless technologies". It sniffs for Zigbee traffic and outputs a JSON file with all required specifics.
 
 ![logo](./logo.png)
 
 
 ## Requirements
 
-This project is based on the Killerbee project, primarily we altered the zbdump script to accomplish our tool. It still depends on some of the packages of Killerbee, so be sure to have those available as well.
+This project is based on the Killerbee project, primarily we altered the zbdump script to accomplish our tool. It still depends on some of the packages of Killerbee, be sure to have those available as well.
 
 - CC2531 usb dongle
 - The Killerbee project: `https://github.com/riverloopsec/killerbee`
@@ -43,7 +43,7 @@ options:
 
 ## Output
 
-The output is a JSON file that contains multiple JSON objects. An example json capture file;
+The output is a JSON file that contains multiple JSON objects: below an example json capture file.
 
 ```JSON
 {"type": "new_scn", "cha": 25, "frq":2475.0, "dev": null, "dvl": ["CC2531 USB Dongle (1:6)"], "pag":0}
