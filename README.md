@@ -15,7 +15,7 @@ This project is based on the Killerbee project, primarily we altered the zbdump 
 
 ## Usage
 
-When all requirements are met, you can use the following command to start the sniffing.
+When all requirements are met, you can use the following command to start sniffing.
 
 ```shell
 $ sudo ./zbsniff2json -c <CHANNEL> -o <OUTPUT FILE> -u
@@ -48,7 +48,7 @@ The output is a JSON file that contains multiple JSON objects: below an example 
 ```JSON
 {"type": "new_scn", "cha": 25, "frq":2475.0, "dev": null, "dvl": ["CC2531 USB Dongle (1:6)"], "pag":0}
 {"type": "new_nwk", "pan": "0x7187", "cha": 25}
-{"type": "nez_dev", "pan": "0x7187", "dev": "00:17:88:01:09:b2:36:e4", "man": "Philips Lighting BV", "cha": 25}
+{"type": "new_dev", "pan": "0x7187", "dev": "00:17:88:01:09:b2:36:e4", "man": "Philips Lighting BV", "cha": 25}
 ```
 
 - new_scn; A new scan is starting.
@@ -68,7 +68,8 @@ The output is a JSON file that contains multiple JSON objects: below an example 
   PAN-ID of the network.
   - Cha \
   The channel that hosts this network.
-- new_dev; A new device is found that has not discovered before.
+
+- new_dev; A new device is found that has not been discovered before.
   - Pan \
   The PAN-ID of the network this device is connected to.
   - Dev \
