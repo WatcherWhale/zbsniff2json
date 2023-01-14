@@ -4,13 +4,17 @@
 
 ## Requirements
 
+Our project is based on the Killerbee project, primarily we altered the zbdump script to accomplish our results.
+
 - https://github.com/riverloopsec/killerbee
-- requirements.txt
+- `requirements.txt`
 
 ## Usage
 
+If all requirements are met, you can use the following command to start the script.
+Below you find the different options to run the script with extra features.
+
 ```shell
-$ sudo pip install -r requirements.txt
 $ sudo ./zbsniff2json -c <CHANNEL> -o <OUTPUT FILE> -u
 ```
 
