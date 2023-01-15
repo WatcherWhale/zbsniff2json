@@ -87,8 +87,8 @@ def dump_packets(args):
             if ext_src is not None:
                 addr = int_to_mac(ext_src)
 
-            if ext_src is not None and addr[0:17] not in devList:
-                devList.append(addr[0:17])
+            if ext_src is not None and addr not in devList:
+                devList.append(addr)
                 try:
                     print(json.dumps({
                         "type": "new_dev",
@@ -113,10 +113,9 @@ def int_to_mac(macint):
     mac = ':'.join(['{}{}'.format(a, b)
                      for a, b
                      in zip(*[iter('{:012x}'.format(macint))]*2)])
-    if len(mac) < 23:
-        return "00:" + mac
-    else:
-        return mac
+    while len(mac) < 23:
+        mac = "00:" + mac
+    return mac
 
 def main():
     global kb
